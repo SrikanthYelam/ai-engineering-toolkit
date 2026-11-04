@@ -29,6 +29,12 @@ Requires PowerShell 5.1+ (Windows PowerShell or `pwsh`). Clone this repo anywher
 .\tools\install.ps1 -Target C:\src\MyApp -Agents claude,copilot
 ```
 
+"Install" does not copy this repo into your project. The installer reads the toolkit's sources and
+writes only the files each assistant looks for inside the project (`AGENTS.md`, `CLAUDE.md`,
+`.claude/`, `.github/`, `.agents/`, `.codex/`). Skills are copied as-is; agents, prompts, and
+instructions are translated into each tool's format. `adapters/`, `tools/`, and `workflows/` never
+leave this repo. The generated files are snapshots, so re-run the installer after changing the toolkit.
+
 Behavior:
 - **Never overwrites** a file it didn't create. Existing `AGENTS.md`, `CLAUDE.md`, skills, etc. are skipped with a warning (merge by hand, e.g. add `@AGENTS.md` to your `CLAUDE.md`).
 - Files it did create are listed in `<project>\.ai-toolkit.json`; re-run the installer after `git pull` here to refresh them. Commit installed files to the project, or add them to its `.gitignore`.
