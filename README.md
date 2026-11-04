@@ -51,7 +51,7 @@ Behavior:
 - **Skill:** create `skills/<kebab-name>/SKILL.md` with `name` (equal to the folder) and `description`.
 - **Agent:** create `agents/<name>.md` with `name`, `description`, optional `access: read-only`, then the prompt body.
 - **Prompt:** create `prompts/<name>.md` with `description`; use `{{input}}` for the user's request.
-- **Instruction:** add a `.md` to `instructions/`; files are concatenated alphabetically.
+- **Instruction:** add a `.md` to `instructions/`; files are concatenated in name order, so use a numeric prefix (`04-...md`).
 - **New assistant:** add `adapters/<name>.ps1` defining `Install-<Name>` and add it to the `-Agents` ValidateSet.
 
 Re-run the installer in each project after changes.
