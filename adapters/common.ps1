@@ -2,6 +2,8 @@
 
 $script:Installed = New-Object 'System.Collections.Generic.List[string]'
 $script:Previous  = @()
+# Name patterns (wildcards allowed) per content kind; 'none' selects nothing. Set by install.ps1.
+$script:Select = @{ skills = @('*'); subagents = @('*'); prompts = @('*'); instructions = @('*') }
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
 function Read-Doc([string]$Path) {
@@ -38,8 +40,27 @@ function Put-Text([string]$Rel, [string]$Text) {
     Put $Rel ($utf8.GetBytes(($Text -replace "`r`n", "`n").TrimEnd("`n") + "`n"))
 }
 
+# Keep the files/folders whose BaseName matches a selected pattern for $Kind.
+# A pattern that matches nothing is an error, so a typo doesn't silently install less.
+function Select-Named([string]$Kind, $Items) {
+    $patterns = @($script:Select[$Kind])
+    if ($patterns -contains 'none') { return }
+    $all = @($Items)
+    foreach ($p in $patterns) {
+        if (-not @($all | Where-Object { $_.BaseName -like $p }).Count) {
+            throw "No $Kind match '$p'. Available: $(($all | ForEach-Object BaseName) -join ', ')"
+        }
+    }
+    $all | Where-Object { $n = $_.BaseName; @($patterns | Where-Object { $n -like $_ }).Count -gt 0 }
+}
+
+function Get-Instructions {
+    Select-Named 'instructions' (Get-ChildItem (Join-Path $script:Root 'instructions') -Filter *.md) |
+        Sort-Object Name
+}
+
 function Get-Skills {
-    Get-ChildItem (Join-Path $script:Root 'skills') -Directory | ForEach-Object {
+    Select-Named 'skills' (Get-ChildItem (Join-Path $script:Root 'skills') -Directory) | ForEach-Object {
         $doc = Read-Doc (Join-Path $_.FullName 'SKILL.md')
         if ($doc.Meta['name'] -cne $_.Name -or $_.Name -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
             throw "Skill '$($_.Name)': frontmatter name must equal the lowercase-hyphen folder name"
@@ -50,7 +71,7 @@ function Get-Skills {
 }
 
 function Get-Agents {
-    Get-ChildItem (Join-Path $script:Root 'agents') -Filter *.md | ForEach-Object {
+    Select-Named 'subagents' (Get-ChildItem (Join-Path $script:Root 'agents') -Filter *.md) | ForEach-Object {
         $doc = Read-Doc $_.FullName
         if ($doc.Meta['name'] -cne $_.BaseName) { throw "Agent '$($_.Name)': name must match file name" }
         if (-not $doc.Meta['description']) { throw "Agent '$($_.Name)': description is required" }
@@ -59,7 +80,7 @@ function Get-Agents {
 }
 
 function Get-Prompts {
-    Get-ChildItem (Join-Path $script:Root 'prompts') -Filter *.md | ForEach-Object {
+    Select-Named 'prompts' (Get-ChildItem (Join-Path $script:Root 'prompts') -Filter *.md) | ForEach-Object {
         $doc = Read-Doc $_.FullName
         $doc | Add-Member Name $_.BaseName
         $doc

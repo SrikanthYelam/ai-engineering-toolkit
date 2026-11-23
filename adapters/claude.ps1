@@ -2,7 +2,7 @@
 
 function Install-Claude {
     # CLAUDE.md imports the shared AGENTS.md so instructions are not duplicated.
-    Put-Text 'CLAUDE.md' "@AGENTS.md"
+    if (@(Get-Instructions).Count) { Put-Text 'CLAUDE.md' "@AGENTS.md" }
     Copy-Skills '.claude/skills'
 
     foreach ($a in Get-Agents) {

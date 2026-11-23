@@ -27,7 +27,14 @@ Requires PowerShell 5.1+ (Windows PowerShell or `pwsh`). Clone this repo anywher
 
 # only some assistants
 .\tools\install.ps1 -Target C:\src\MyApp -Agents claude,copilot
+
+# only some content (names, wildcards allowed; 'none' = nothing of that kind; default = all)
+.\tools\install.ps1 -Target C:\src\MyApp -Skills dotnet-*,conventional-commit -Prompts fix-bug -Subagents none
 ```
+
+`-Skills` takes skill folder names, `-Subagents` and `-Prompts` take file names without `.md`
+(from `agents/` and `prompts/`), and `-Instructions` takes `instructions/` file names (e.g. `01-*`).
+A name that matches nothing fails the install before anything is written.
 
 "Install" does not copy this repo into your project. The installer reads the toolkit's sources and
 writes only the files each assistant looks for inside the project (`AGENTS.md`, `CLAUDE.md`,
@@ -38,6 +45,7 @@ leave this repo. The generated files are snapshots, so re-run the installer afte
 Behavior:
 - **Never overwrites** a file it didn't create. Existing `AGENTS.md`, `CLAUDE.md`, skills, etc. are skipped with a warning (merge by hand, e.g. add `@AGENTS.md` to your `CLAUDE.md`).
 - Files it did create are listed in `<project>\.ai-toolkit.json`; re-run the installer after `git pull` here to refresh them. Commit installed files to the project, or add them to its `.gitignore`.
+- **Each run installs exactly what you selected.** Toolkit-created files that are no longer selected (or were deleted from the toolkit) are removed, so repeat the same `-Agents`/`-Skills`/... arguments when refreshing. Use `-DryRun` to see `write`/`remove` lines first. Files you created are never removed.
 - Invalid skills/agents (name not matching folder/file, missing description) fail the install.
 
 ## Usage
